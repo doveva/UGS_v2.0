@@ -1,0 +1,227 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} График ремонтных работ {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+
+{% endblock stylesheets %}
+
+{% load filters %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">График ремонтных работ</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Модуль ПХГ</a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">График ремонтных работ</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                <h5 class="mb-3">Выбор модели</h5>
+                <hr>
+                <div class="card">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-header"><h5>Создание графика ремонтных работ</h5></div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2" style="text-align: center">
+                                    <select class="form-control" id="UGS_select" name="UGS_select" onchange="load_data()">
+                                        {% for model in models %}
+                                            <option value="{{ model }}">{{ model }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-md-2" style="text-align: center">Название ПХГ</div>
+                                <div class="col-md-2" style="text-align: center">Дата начала работ</div>
+                                <div class="col-md-2" style="text-align: center">Дата окончания работ</div>
+                                <div class="col-md-2" style="text-align: center">Объём ограничений на закачку</div>
+                                <div class="col-md-2" style="text-align: center">Объём ограничений на отбор</div>
+                                <div class="col-sm-1" style="text-align: center">Выбрать</div>
+                            </div>
+                            <br>
+                            {% for model in models %}
+                                <div class="field_tags" id="data_wrapper_{{ model }}"></div>
+                            {% endfor %}
+                            <div id="data_wrapper"></div>
+                            <input type="hidden" id="UGS" value="{{ UGS_names|safe }}">
+                            <div class="row">
+                                <div class="col-md-2" style="text-align: center"><button type="button" class="btn-primary" style="width: 100%" onclick="add_data()">Добавить точку</button></div>
+                                <div class="col-md-2" style="text-align: center"><button type="submit" class="btn-warning" style="width: 100%">Сохранить</button></div>
+                                <div class="col-md-2" style="text-align: center"><button type="button" class="btn-danger" style="width: 100%" onclick="delete_selected()">Удалить</button></div>
+                                <script>
+                                    function add_data(){
+                                        const model_name = document.getElementById("UGS_select").value
+
+                                        var data_string
+                                        data_string = document.createElement("div")
+                                        data_string.className = "row"
+
+                                        var ugs_wrapper
+                                        ugs_wrapper = document.createElement("div")
+                                        ugs_wrapper.className = "col-md-2"
+
+                                        var ugs
+                                        ugs = document.createElement("select")
+                                        ugs.className = "form-control"
+                                        ugs.name = "ugs_name"
+
+                                        var UGS_nm = document.getElementById("UGS").value.replace("[", "").replace("]","")
+                                        UGS_nm = UGS_nm.split("', '")
+                                        UGS_nm.forEach(item_data => {
+                                            var option_var = document.createElement("option")
+                                            option_var.value = item_data.replace("'","")
+                                            option_var.innerHTML = item_data.replace("'","")
+                                            ugs.appendChild(option_var)
+                                        })
+
+
+                                        ugs_wrapper.appendChild(ugs)
+                                        data_string.appendChild(ugs_wrapper)
+
+                                        var f_d_wrapper
+                                        f_d_wrapper = document.createElement("div")
+                                        f_d_wrapper.className = "col-md-2"
+
+                                        var first_date
+                                        first_date = document.createElement("input")
+                                        first_date.type = "date"
+                                        first_date.className = "form-control"
+                                        first_date.name = "first_date"
+                                        first_date.required = true
+                                        f_d_wrapper.appendChild(first_date)
+                                        data_string.appendChild(f_d_wrapper)
+
+                                        var l_d_wrapper
+                                        l_d_wrapper = document.createElement("div")
+                                        l_d_wrapper.className = "col-md-2"
+
+                                        var last_date
+                                        last_date = document.createElement("input")
+                                        last_date.type = "date"
+                                        last_date.className = "form-control"
+                                        last_date.name = "last_date"
+                                        last_date.required = true
+                                        l_d_wrapper.appendChild(last_date)
+                                        data_string.appendChild(l_d_wrapper)
+
+                                        var in_data_wrapper
+                                        in_data_wrapper = document.createElement("div")
+                                        in_data_wrapper.className = "col-md-2"
+
+                                        var in_value
+                                        in_value = document.createElement("input")
+                                        in_value.type = "text"
+                                        in_value.className = "form-control"
+                                        in_value.name = "in_value"
+                                        in_value.required = true
+                                        in_data_wrapper.appendChild(in_value)
+                                        data_string.appendChild(in_data_wrapper)
+
+                                        var out_data_wrapper
+                                        out_data_wrapper = document.createElement("div")
+                                        out_data_wrapper.className = "col-md-2"
+
+                                        var out_value
+                                        out_value = document.createElement("input")
+                                        out_value.type = "text"
+                                        out_value.className = "form-control"
+                                        out_value.name = "out_value"
+                                        out_value.required = true
+                                        out_data_wrapper.appendChild(out_value)
+                                        data_string.appendChild(out_data_wrapper)
+
+                                        var check_wrapper
+                                        check_wrapper = document.createElement("div")
+                                        check_wrapper.className = "col-sm-1"
+                                        check_wrapper.style.alignSelf= "center"
+
+                                        var delete_check
+                                        delete_check = document.createElement("input")
+                                        delete_check.type = "checkbox"
+                                        delete_check.className = "form-control"
+                                        delete_check.style.verticalAlign = "center"
+                                        delete_check.name = "delete_check"
+                                        check_wrapper.appendChild(delete_check)
+                                        data_string.appendChild(check_wrapper)
+
+                                        var string_wrapper
+                                        string_wrapper = document.createElement("div")
+                                        string_wrapper.name = "string_row"
+                                        string_wrapper.appendChild(data_string)
+                                        string_wrapper.appendChild(document.createElement("br"))
+
+                                        var element
+                                        element = document.getElementById("data_wrapper_" + model_name)
+                                        element.appendChild(string_wrapper)
+
+                                    }
+                                </script>
+                                <script>
+                                    function delete_selected(){
+                                        const checkboxes = document.getElementsByName("delete_check")
+                                        var arr = []
+                                        checkboxes.forEach((checkbox, i) => {
+                                            if (checkbox.checked === true) {
+                                                arr.push(i)
+                                            }
+                                        })
+                                        let sorted_arr = arr.sort((a,b) => b-a);
+                                        
+                                        for (let checkbox of sorted_arr){
+                                            checkboxes[checkbox].parentElement.parentElement.parentElement.remove()
+                                        }
+
+                                    }
+                                </script>
+                                <script>
+                                    function load_data(){
+                                        var textbox = document.getElementById("UGS_select").value
+                                        var wrappers = document.getElementsByClassName("field_tags")
+                                        var arr = Array.prototype.slice.call(wrappers)
+                                        arr.forEach(wrapper => {
+                                            wrapper.hidden = wrapper.id !== "data_wrapper_" + textbox;
+                                        })
+                                    }
+                                </script>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+    <script src="/static/assets/plugins/chart-morris/js/raphael.min.js"></script>
+    <script src="/static/assets/plugins/chart-morris/js/morris.min.js"></script>
+    <script src="/static/assets/js/pages/chart-morris-custom.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+{% endblock javascripts %}

@@ -1,0 +1,93 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Загрузка модели {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+
+{% endblock stylesheets %}
+
+{% load filters %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">Модуль ПХГ</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Модуль ПХГ</a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Выбор модели</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                <h5 class="mb-3">Выбор модели</h5>
+                <hr>
+                <div class="card">
+                    <form method="post">
+                    {% csrf_token %}
+                        <table class="table-bordered" style="width: 100%">
+                            <thead>
+                            <tr style="width: fit-content">
+                                 <th style="text-align: left">
+                                    Название модели
+                                </th>
+                                <th style="text-align: left">
+                                    Автор
+                                </th>
+                                <th style="text-align: left">
+                                    Дата создания
+                                </th>
+                                <th style="text-align: center">
+                                    Загрузка
+                                </th>
+                                <th style="text-align: center">
+                                    Удаление
+                                </th>
+                            </tr>
+
+                            </thead>
+                            <tbody>
+                                {% for model_name in model_names %}
+                                    <tr>
+                                        <td class="table-primary">{{ model_name }}</td>
+                                        <td class="table-primary">{{ model_meta|dict_index:model_name|dict_index:"user" }}</td>
+                                        <td class="table-primary">{{ model_meta|dict_index:model_name|dict_index:"date" }}</td>
+                                        <td class="table-primary" style="text-align: center"><button type="submit" class="btn-primary" name="model_load" value="{{ model_name }}" >Загрузить выбранную модель</button></td>
+                                        <td class="table-primary" style="text-align: center"><button type="submit" class="btn-danger" name="model_delete" value="{{ model_name }}">Удалить выбранную модель</button></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+    <script src="/static/assets/plugins/chart-morris/js/raphael.min.js"></script>
+    <script src="/static/assets/plugins/chart-morris/js/morris.min.js"></script>
+    <script src="/static/assets/js/pages/chart-morris-custom.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+{% endblock javascripts %}

@@ -1,0 +1,1279 @@
+{% extends "layouts/base.html" %}
+
+{% load filters %}
+
+{% block title %} Создание модели {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h5 class="m-b-10">Модуль ПХГ</h5>
+                            </div>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                <li class="breadcrumb-item"><a href="javascript:">Создание модели</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ breadcrumb ] end -->
+            <div class="main-body">
+                <div class="page-wrapper">
+                    <!-- [ Main Content ] start -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Таблица подготовки модели</h5>
+                                    <span class="d-block m-t-5">Проверьте параметры, указанные в таблице, перед запуском расчёта</span>
+                                </div>
+                                <div class="card-block table-border-style">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align: center">Название ПХГ</th>
+                                                    <th style="text-align: center">Кривые</th>
+                                                    <th style="text-align: center">Исходные параметры</th>
+                                                    <th style="text-align: center">Сезоны потоков ГПЭ</th>
+                                                    <th style="text-align: center">Сезоны потоков ГМТ</th>
+                                                    <th style="text-align: center">Закачка по дням</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for name in UGS_names %}
+                                                    <tr>
+                                                        <th scope="row">{{ name }}</th>
+                                                        {% for value in data_check|dict_index:name %}
+                                                            {% if value %}
+                                                                <td style="text-align: center">+</td>
+                                                            {% else %}
+                                                                <td style="text-align: center">-</td>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                    <br>
+                                    <label>
+                                        В качестве обозначений принято:
+                                    </label>
+                                    <label>
+                                        <code>+</code> значения корректны;
+                                    </label>
+                                    <label>
+                                        <code>-</code> значения некорректны;
+                                    </label>
+                                    <hr>
+                                <form id="dates" method="post">
+                                    {% csrf_token %}
+                                    <label for="date_first">Введите день начала отсчёта</label>
+                                        <div class="col-md-4">
+                                            <input type="date" class="form-control" value="{{ dates|first }}" name ="date_first" required>
+
+                                        </div>
+                                    <label for="date_last">Введите последний отчётный день</label>
+                                        <div class="col-md-4">
+                                            <input type="date" class="form-control" value="{{ dates|last }}" name ="date_last" required>
+
+                                        </div>
+                                    {% if not params_flag_value %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="param_flag" id="with_params" value="with">
+                                            <label class="form-check-label" for="with_params">
+                                                С коррекцией параметров
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="param_flag" id="wo_params" value="wo" checked>
+                                            <label class="form-check-label" for="wo_params">
+                                                Без коррекции параметров
+                                            </label>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="param_flag" id="with_params" value="with" checked>
+                                            <label class="form-check-label" for="with_params">
+                                                С коррекцией параметров
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="param_flag" id="wo_params" value="wo">
+                                            <label class="form-check-label" for="wo_params">
+                                                Без коррекции параметров
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                </form>
+                                    <hr>
+                                        <div class="row">
+                                            <button class="btn btn-primary" type="submit" form="dates" name="Submit_dates">Создать шаблон модели</button>
+                                            {% if model_block %}
+                                                <button class="btn btn-primary" type="submit" form="settings_form" name="Submit_settings" disabled>Сохранить модель</button>
+                                            {% else %}
+                                                <button class="btn btn-primary" type="submit" form="settings_form" name="Submit_settings">Сохранить модель</button>
+                                            {% endif %}
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not model_block %}
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Создание модели</h5>
+                                </div>
+                                <form method="post" action="#" id="settings_form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name = "year_last" value={{ years|last }}>
+                                    <input type="hidden" name = "year_first" value={{ years|first }}>
+                                    <input type="hidden" name = "date_last" value={{ dates|last }}>
+                                    <input type="hidden" name = "date_first" value={{ dates|first }}>
+                                    <input type="hidden" name = "main_settings_(calc_type)" id="main_settings_(calc_type)" value="{{ params_flag_value }}">
+                                    <input type="hidden" name = "model_name" value={{ model_name }}>
+                                    <div class="col-sm-12">
+                                        <h5 class="mt-4">Список ПХГ</h5>
+                                        <hr>
+                                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                            {% for name in UGS_names %}
+                                                {% if name == UGS_names|first  %}
+                                                    <li class="nav-item">
+                                                        <a class="nav-link active" id="UGS_{{ name }}_tab" data-toggle="pill" href="#UGS_{{ name }}" role="tab" aria-controls="UGS_{{ name }}" aria-selected="true">{{ name }}</a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" id="UGS_{{ name }}_tab" data-toggle="pill" href="#UGS_{{ name }}" role="tab" aria-controls="UGS_{{ name }}" aria-selected="false">{{ name }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        <div class="tab-content" id="pills-tabContent">
+                                            {% for name in UGS_names %}
+                                                {% if name == UGS_names|first %}
+                                                    <div class="tab-pane fade show active" id="UGS_{{ name }}" role="tabpanel" aria-labelledby="UGS_{{ name }}_tab">
+                                                        <div class="row">
+                                                            <div class="col-sm-12">
+                                                                <h5>Параметры модели</h5>
+                                                                <hr>
+                                                                <ul class="nav nav-tabs" id="settings" role="tablist">
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="main_settings_{{ name }}_tab" data-toggle="tab" href="#main_settings_{{ name }}" role="tab" aria-controls="main_settings_{{ name }}" aria-selected="false">Параметры ПХГ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="season_GPE_{{ name }}_tab" data-toggle="tab" href="#season_GPE_{{ name }}" role="tab" aria-controls="season_GPE_{{ name }}" aria-selected="false">Сезоны потоков ГПЕ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="season_GMT_{{ name }}_tab" data-toggle="tab" href="#season_GMT_{{ name }}" role="tab" aria-controls="season_GMT_{{ name }}" aria-selected="false">Сезоны потоков ГМТ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="daily_stream_{{ name }}_tab" data-toggle="tab" href="#daily_stream_{{ name }}" role="tab" aria-controls="daily_stream_{{ name }}" aria-selected="false">Дневные данные</a>
+                                                                    </li>
+                                                                </ul>
+                                                                <div class="tab-content" id="myTabContent">
+                                                                    <div class="tab-pane fade show active" id="main_settings_{{ name }}" role="tabpanel" aria-labelledby="main_settings_{{ name }}_tab">
+                                                                        <label class="col-form-label" for="main_settings_{{ name }}(GPE_balance)"><b>Текущий баланс ГПЕ</b></label>
+                                                                        <input type="text" class="form-control" placeholder="Введите текущий баланс ГПЕ" name="main_settings_{{ name }}(GPE_balance)" id="main_settings_{{ name }}(GPE_balance)" value="{{ GPE_balance|dict_index:name }}" required>
+                                                                        <hr>
+                                                                        <label class="col-form-label" for="main_settings_{{ name }}(GMT_balance)"><b>Текущий баланс ГМТ</b></label>
+                                                                        <input type="text" class="form-control" name = "main_settings_{{ name }}(GMT_balance)" id="main_settings_{{ name }}(GMT_balance)" value="{{ GMT_balance|dict_index:name }}" required>
+                                                                        <hr>
+                                                                        {% if params_flag_value %}
+                                                                            <div class="row row-cols-lg-auto g-3">
+                                                                                <div class="col-md-4">
+                                                                                    <label class="col-form-label" for="main_settings_{{ name }}(in_coef)"><b>Техническая возможность на закачку</b></label>
+                                                                                    <input type="text" class="form-control" name = "main_settings_{{ name }}(in_coef)" id="main_settings_{{ name }}(in_coef)" value="{{ prod_coef|dict_index:name|list_index:0 }}" required>
+                                                                                </div>
+                                                                                <div class="col-md-4">
+                                                                                    <label class="col-form-label" for="main_settings_{{ name }}(out_coef)"><b>Техническая возможность на отбор</b></label>
+                                                                                    <input type="text" class="form-control" name = "main_settings_{{ name }}(out_coef)" id="main_settings_{{ name }}(out_coef)" value="{{ prod_coef|dict_index:name|list_index:1 }}" required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <hr>
+                                                                        {% else %}
+                                                                            <input type="hidden" name = "main_settings_{{ name }}(in_coef)" id="main_settings_{{ name }}(in_coef)" value="{{ prod_coef|dict_index:name|list_index:0 }}">
+                                                                            <input type="hidden" name = "main_settings_{{ name }}(out_coef)" id="main_settings_{{ name }}(out_coef)" value="{{ prod_coef|dict_index:name|list_index:1 }}">
+                                                                        {% endif %}
+                                                                        <label class="col-form-label" for="weights_in_{{ name }}"><b>Коэффициенты направлений на закачку</b></label>
+                                                                        <div class="card-block table-border-style" id="weights_in_{{ name }}">
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-hover">
+                                                                                    <thead>
+                                                                                        <tr>
+                                                                                            <th></th>
+                                                                                            {% for direction in directions %}
+                                                                                                <th style="text-align: center">{{ direction }}</th>
+                                                                                            {% endfor %}
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {% for UGS_nm in UGS_names %}
+                                                                                            <tr>
+                                                                                                <th>{{ UGS_nm }}</th>
+                                                                                                        {% if UGS_nm == "Дамборжице" %}
+                                                                                                            {% for in_data in Дамборжице_in_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name = "main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Катарина" %}
+                                                                                                            {% for in_data in Катарина_in_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" name = "main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Бергермеер" %}
+                                                                                                            {% for in_data in Бергермеер_in_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Реден" %}
+                                                                                                            {% for in_data in Реден_in_weights %}
+                                                                                                               <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Хайдах" %}
+                                                                                                            {% for in_data in Хайдах_in_weights %}
+                                                                                                               <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% else %}
+                                                                                                            {% for in_data in Хайдах_in_weights %}
+                                                                                                            <td>
+                                                                                                                <input type="text" class="form-control" placeholder="" value="" id="main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" name = "main_settings_{{ name }}(weights_in_f{{ UGS_nm }}" required>
+                                                                                                            </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% endif %}
+                                                                                            </tr>
+                                                                                        {% endfor %}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        </div>
+                                                                        <hr>
+                                                                        <label class="col-form-label" for="weights_out_{{ name }}"><b>Коэффициенты направлений на отбор</b></label>
+                                                                        <div class="card-block table-border-style" id="weights_out_{{ name }}">
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-hover">
+                                                                                    <thead>
+                                                                                        <tr>
+                                                                                            <th></th>
+                                                                                            {% for direction in directions %}
+                                                                                                <th style="text-align: center">{{ direction }}</th>
+                                                                                            {% endfor %}
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {% for UGS_nm in UGS_names %}
+                                                                                            <tr>
+                                                                                                <th>{{ UGS_nm }}</th>
+                                                                                                        {% if UGS_nm == "Дамборжице" %}
+                                                                                                            {% for in_data in Дамборжице_out_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Катарина" %}
+                                                                                                            {% for in_data in Катарина_out_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Бергермеер" %}
+                                                                                                            {% for in_data in Бергермеер_out_weights %}
+                                                                                                                <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Реден" %}
+                                                                                                            {% for in_data in Реден_out_weights %}
+                                                                                                               <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% elif UGS_nm == "Хайдах" %}
+                                                                                                            {% for in_data in Хайдах_out_weights %}
+                                                                                                               <td>
+                                                                                                                    <input type="text" class="form-control" placeholder="" value="{{ in_data }}" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% else %}
+                                                                                                            {% for in_data in Хайдах_out_weights %}
+                                                                                                            <td>
+                                                                                                                <input type="text" class="form-control" placeholder="" value="" id="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" name="main_settings_{{ name }}(weights_out_f{{ UGS_nm }}" required>
+                                                                                                            </td>
+                                                                                                            {% endfor %}
+                                                                                                        {% endif %}
+                                                                                            </tr>
+                                                                                        {% endfor %}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="season_GPE_{{ name }}" role="tabpanel" aria-labelledby="season_GPE_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Закачка/отбор ГПЭ по годам</h5>
+                                                                            <hr>
+                                                                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                {% for year in years %}
+                                                                                {% if year == years|first %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link active" id="GPE_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_{{ year }}_{{ name }}" aria-selected="true">ГПЕ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% else %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link" id="GPE_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_{{ year }}_{{ name }}" aria-selected="true">ГПЕ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            <div class="tab-content" id="myTabContent">
+                                                                                {% for year in years %}
+                                                                                    {% if year == years|first %}
+                                                                                    <div class="tab-pane fade show active" id="GPE_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_{{ year }}_{{ name }}_tab">
+                                                                                        <div class="card-block table-border-style" id="GPE_stream_{{ name }}">
+                                                                                            <div class="table-responsive">
+                                                                                                <table class="table table-hover">
+                                                                                                    <thead>
+                                                                                                        <tr style="text-align:center; vertical-align:middle">
+                                                                                                            <th></th>
+                                                                                                            {% for month in months %}
+                                                                                                                <th style="text-align:center; vertical-align:middle">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        <tr style="text-align:center">
+                                                                                                            <td>
+                                                                                                                Отбор
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center">
+                                                                                                                    <input style="text-align:center" class="form-control" type="text" id="GPE_out_{{ year }}_{{ name }}" name="GPE_out_{{ year }}_{{ name }}" value="{{ flows_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Закачка
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center; vertical-align:middle">
+                                                                                                                        <input style="text-align:center; vertical-align:middle" class="form-control" type="text" id="GPE_in_{{ year }}_{{ name }}" name="GPE_in_{{ year }}_{{ name }}" value="{{ flows_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {% else %}
+                                                                                    <div class="tab-pane fade" id="GPE_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_{{ year }}_{{ name }}_tab">
+                                                                                        <div class="card-block table-border-style" id="GPE_stream_{{ name }}">
+                                                                                            <div class="table-responsive">
+                                                                                                <table class="table table-hover">
+                                                                                                    <thead>
+                                                                                                        <tr>
+                                                                                                            <th></th>
+                                                                                                            {% for month in months  %}
+                                                                                                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Отбор
+                                                                                                            </td>
+                                                                                                            {% for i in month_range %}
+                                                                                                                <td style="text-align:center">
+                                                                                                                            <input style="text-align:center" class="form-control" type="text" id="GPE_out_{{ year }}_{{ name }}" name="GPE_out_{{ year }}_{{ name }}" value="{{ flows_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                            </tr>
+                                                                                                            <tr>
+                                                                                                            <td>
+                                                                                                                Закачка
+                                                                                                            </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; vertical-align:middle">
+                                                                                                                        <input style="text-align:center; vertical-align:middle" class="form-control" type="text" id="GPE_in_{{ year }}_{{ name }}" name="GPE_in_{{ year }}_{{ name }}" value="{{ flows_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {% endif %}
+                                                                            {% endfor %}
+
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="season_GMT_{{ name }}" role="tabpanel" aria-labelledby="season_GMT_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Закачка/отбор ГМТ по годам</h5>
+                                                                            <hr>
+                                                                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                {% for year in years %}
+                                                                                {% if year == years|first %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link active" id="GMT_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GMT_{{ year }}_{{ name }}" role="tab" aria-controls="GMT_{{ year }}_{{ name }}" aria-selected="true">ГМТ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% else %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link" id="GMT_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GMT_{{ year }}_{{ name }}" role="tab" aria-controls="GMT_{{ year }}_{{ name }}" aria-selected="true">ГМТ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            <div class="tab-content" id="myTabContent">
+                                                                                {% for year in years %}
+                                                                                    {% if year == years|first %}
+                                                                                        <div class="tab-pane fade show active" id="GMT_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GMT_{{ year }}_{{ name }}_tab">
+                                                                                            <div class="card-block table-border-style" id="GMT_stream_{{ name }}">
+                                                                                                <div class="table-responsive">
+                                                                                                    <table class="table table-hover" style="width: 200%">
+                                                                                                        <col style="width: 200%">
+                                                                                                        <thead>
+                                                                                                            <tr style="text-align:center; vertical-align:middle">
+                                                                                                                <th></th>
+                                                                                                                {% for month in months %}
+                                                                                                                    <th class="col-sm-12 col-md-6" style="text-align:center; vertical-align:middle;width: 200px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            <tr style="text-align:center">
+                                                                                                                <td>
+                                                                                                                    Отбор
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; width: 200px" >
+                                                                                                                        <input style="text-align:center" class="form-control" size="20" type="text" id="GMT_out_{{ year }}_{{ name }}" name="GMT_out_{{ year }}_{{ name }}" value="{{ gmt_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                            <tr>
+                                                                                                                <td>
+                                                                                                                    Закачка
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; vertical-align:middle; width: 200px">
+                                                                                                                        <input  style="text-align:center" class="form-control" type="text" id="GMT_in_{{ year }}_{{ name }}" name="GMT_in_{{ year }}_{{ name }}" value="{{ gmt_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    {% else %}
+                                                                                        <div class="tab-pane fade" id="GMT_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GMT_{{ year }}_{{ name }}_tab">
+                                                                                            <div class="card-block table-border-style" id="GMT_stream_{{ name }}">
+                                                                                                <div class="table-responsive">
+                                                                                                    <table class="table table-hover" style="width: 200%">
+                                                                                                        <col style="width: 200%">
+                                                                                                        <thead>
+                                                                                                            <tr style="text-align:center; vertical-align:middle">
+                                                                                                                <th></th>
+                                                                                                                {% for month in months %}
+                                                                                                                    <th class="col-sm-12 col-md-6" style="text-align:center; vertical-align:middle;width: 200px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            <tr style="text-align:center">
+                                                                                                                <td>
+                                                                                                                    Отбор
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; width: 200px" >
+                                                                                                                        <input style="text-align:center" class="form-control" size="20" type="text" id="GMT_out_{{ year }}_{{ name }}" name="GMT_out_{{ year }}_{{ name }}" value="{{ gmt_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                            <tr>
+                                                                                                                <td>
+                                                                                                                    Закачка
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; vertical-align:middle; width: 200px">
+                                                                                                                        <input  style="text-align:center" class="form-control" type="text" id="GMT_in_{{ year }}_{{ name }}" name="GMT_in_{{ year }}_{{ name }}" value="{{ gmt_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    {% endif %}
+
+                                                                                {% endfor %}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="daily_stream_{{ name }}" role="tabpanel" aria-labelledby="daily_stream_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Распределение закачки и отбора в месяце по годам</h5>
+                                                                            <hr>
+                                                                                {% if not GPE_years|dict_index:name|length == 0 %}
+                                                                                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                    {% for year in GPE_years|dict_index:name %}
+                                                                                        {% if year == years|first %}
+                                                                                            <li class="nav-item">
+                                                                                                <a class="nav-link active" id="GPE_month_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_month_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_month_{{ year }}_{{ name }}" aria-selected="true">{{ year }} </a>
+                                                                                            </li>
+                                                                                            {% else %}
+                                                                                            <li class="nav-item">
+                                                                                                <a class="nav-link" id="GPE_month_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_month_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_month_{{ year }}_{{ name }}" aria-selected="true">{{ year }} </a>
+                                                                                            </li>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                    </ul>
+                                                                                    <div class="tab-content" id="myTabContent">
+                                                                                        {% if not GPE_years|dict_index:name|length == 0 %}
+                                                                                            {% for year in GPE_years|dict_index:name %}
+                                                                                                {% if year == GPE_years|dict_index:name|first %}
+                                                                                                    <div class="tab-pane fade show active" id="GPE_month_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_month_{{ year }}_{{ name }}_tab">
+                                                                                                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <li class="nav-item">
+                                                                                                                    <a class="nav-link" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab" data-toggle="pill" href="#GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tab" aria-controls="GPE_daily_{{ year }}_{{ month }}_{{ name }}" aria-selected="true">{{ month }} </a>
+                                                                                                                </li>
+                                                                                                            {% endfor %}
+                                                                                                        </ul>
+
+                                                                                                        <div class="tab-content" id="myTabContent">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <div class="tab-pane fade" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab">
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату начала периода</label>
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите значение отбора/закачки</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_first_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="text" name="date_value_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату конца периода</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_last_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <br>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <button type="button" class="btn btn-primary" name ="button_date" value="{{ year }}__{{ month }}__{{ name }}" onclick="date_function(this)">Сохранить значение</button>
+                                                                                                                            <input type="hidden" name="range_length_{{ year }}_{{ month }}_{{ name }}" value="{{ days_range|dict_index:name|dict_index:year|dict_index:month|length }}">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <hr>
+                                                                                                                    <table>
+                                                                                                                        <thead>
+                                                                                                                            <tr>
+                                                                                                                                <th>
+                                                                                                                                    Дата
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Отбор
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Закачка
+                                                                                                                                </th>
+                                                                                                                            </tr>
+
+                                                                                                                        </thead>
+                                                                                                                        <tbody>
+                                                                                                                            {% for d in days_range|dict_index:name|dict_index:year|dict_index:month %}
+                                                                                                                                <tr>
+                                                                                                                                    <th>
+                                                                                                                                        {{ d }}
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_out_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:0 }}">
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_in_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:1 }}">
+
+                                                                                                                                    </th>
+                                                                                                                                </tr>
+                                                                                                                            {% endfor %}
+                                                                                                                        </tbody>
+                                                                                                                    </table>
+                                                                                                                </div>
+                                                                                                            {% endfor %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% else %}
+                                                                                                    <div class="tab-pane fade" id="GPE_month_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_month_{{ year }}_{{ name }}_tab">
+                                                                                                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <li class="nav-item">
+                                                                                                                    <a class="nav-link" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab" data-toggle="pill" href="#GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tab" aria-controls="GPE_daily_{{ year }}_{{ month }}_{{ name }}" aria-selected="true">{{ month }} </a>
+                                                                                                                </li>
+                                                                                                            {% endfor %}
+                                                                                                        </ul>
+
+                                                                                                        <div class="tab-content" id="myTabContent">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <div class="tab-pane fade" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab">
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату начала периода</label>
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите значение отбора/закачки</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_first_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="text" name="date_value_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату конца периода</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_last_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <br>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <button type="button" class="btn btn-primary" name ="button_date" value="{{ year }}__{{ month }}__{{ name }}" onclick="date_function(this)">Сохранить значение</button>
+                                                                                                                            <input type="hidden" name="range_length_{{ year }}_{{ month }}_{{ name }}" value="{{ days_range|dict_index:name|dict_index:year|dict_index:month|length }}">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <hr>
+                                                                                                                    <table>
+                                                                                                                        <thead>
+                                                                                                                            <tr>
+                                                                                                                                <th>
+                                                                                                                                    Дата
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Отбор
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Закачка
+                                                                                                                                </th>
+                                                                                                                            </tr>
+
+                                                                                                                        </thead>
+                                                                                                                        <tbody>
+                                                                                                                            {% for d in days_range|dict_index:name|dict_index:year|dict_index:month %}
+                                                                                                                                <tr>
+                                                                                                                                    <th>
+                                                                                                                                        {{ d }}
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_out_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:0 }}">
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_in_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:1 }}">
+
+                                                                                                                                    </th>
+                                                                                                                                </tr>
+                                                                                                                            {% endfor %}
+                                                                                                                        </tbody>
+                                                                                                                    </table>
+                                                                                                                </div>
+                                                                                                            {% endfor %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% endif %}
+                                                                                            {% endfor %}
+                                                                                        {% endif %}
+                                                                                    </div>
+                                                                                {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="tab-pane fade" id="UGS_{{ name }}" role="tabpanel" aria-labelledby="UGS_{{ name }}_tab">
+                                                        <div class="row">
+                                                            <div class="col-sm-12">
+                                                                <h5>Параметры модели</h5>
+                                                                <hr>
+                                                                <ul class="nav nav-tabs" id="settings" role="tablist">
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="main_settings_{{ name }}_tab" data-toggle="tab" href="#main_settings_{{ name }}" role="tab" aria-controls="main_settings_{{ name }}" aria-selected="false">Параметры ПХГ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="season_GPE_{{ name }}_tab" data-toggle="tab" href="#season_GPE_{{ name }}" role="tab" aria-controls="season_GPE_{{ name }}" aria-selected="false">Сезоны потоков ГПЕ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="season_GMT_{{ name }}_tab" data-toggle="tab" href="#season_GMT_{{ name }}" role="tab" aria-controls="season_GMT_{{ name }}" aria-selected="false">Сезоны потоков ГМТ</a>
+                                                                    </li>
+                                                                    <li class="nav-item">
+                                                                        <a class="nav-link text-uppercase" id="daily_stream_{{ name }}_tab" data-toggle="tab" href="#daily_stream_{{ name }}" role="tab" aria-controls="daily_stream_{{ name }}" aria-selected="false">Дневные данные</a>
+                                                                    </li>
+                                                                </ul>
+                                                                <div class="tab-content" id="myTabContent">
+                                                                    <div class="tab-pane fade show active" id="main_settings_{{ name }}" role="tabpanel" aria-labelledby="main_settings_{{ name }}_tab">
+                                                                        <label class="col-form-label" for="main_settings_{{ name }}(GPE_balance)"><b>Текущий баланс ГПЕ</b></label>
+                                                                        <input type="text" class="form-control" placeholder="Введите текущий баланс ГПЕ" name="main_settings_{{ name }}(GPE_balance)" id="main_settings_{{ name }}(GPE_balance)" value="{{ GPE_balance|dict_index:name }}" required>
+                                                                        <hr>
+                                                                        <label class="col-form-label" for="main_settings_{{ name }}(GMT_balance)"><b>Текущий баланс ГМТ</b></label>
+                                                                        <input type="text" class="form-control" name = "main_settings_{{ name }}(GMT_balance)" id="main_settings_{{ name }}(GMT_balance)" value="{{ GMT_balance|dict_index:name }}" required>
+
+                                                                        {% if params_flag_value %}
+                                                                            <hr>
+                                                                            <div class="row row-cols-lg-auto g-3">
+                                                                                <div class="col-md-4">
+                                                                                    <label class="col-form-label" for="main_settings_{{ name }}(in_coef)"><b>Техническая возможность на закачку</b></label>
+                                                                                    <input type="text" class="form-control" name = "main_settings_{{ name }}(in_coef)" id="main_settings_{{ name }}(in_coef)" value="{{ prod_coef|dict_index:name|list_index:0 }}" required>
+                                                                                </div>
+                                                                                <div class="col-md-4">
+                                                                                    <label class="col-form-label" for="main_settings_{{ name }}(out_coef)"><b>Техническая возможность на отбор</b></label>
+                                                                                    <input type="text" class="form-control" name = "main_settings_{{ name }}(out_coef)" id="main_settings_{{ name }}(out_coef)" value="{{ prod_coef|dict_index:name|list_index:1 }}" required>
+                                                                                </div>
+                                                                            </div>
+                                                                            <hr>
+                                                                        {% else %}
+                                                                            <input type="hidden" name = "main_settings_{{ name }}(in_coef)" id="main_settings_{{ name }}(in_coef)" value="{{ prod_coef|dict_index:name|list_index:0 }}">
+                                                                            <input type="hidden" name = "main_settings_{{ name }}(out_coef)" id="main_settings_{{ name }}(out_coef)" value="{{ prod_coef|dict_index:name|list_index:1 }}">
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="season_GPE_{{ name }}" role="tabpanel" aria-labelledby="season_GPE_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Закачка/отбор ГПЕ по годам</h5>
+                                                                            <hr>
+                                                                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                {% for year in years %}
+                                                                                {% if year == years|first %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link active" id="GPE_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_{{ year }}_{{ name }}" aria-selected="true">ГПЕ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% else %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link" id="GPE_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_{{ year }}_{{ name }}" aria-selected="true">ГПЕ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            <div class="tab-content" id="myTabContent">
+                                                                                {% for year in years %}
+                                                                                    {% if year == years|first %}
+                                                                                    <div class="tab-pane fade show active" id="GPE_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_{{ year }}_{{ name }}_tab">
+                                                                                        <div class="card-block table-border-style" id="GPE_stream_{{ name }}">
+                                                                                            <div class="table-responsive">
+                                                                                                <table class="table table-hover">
+                                                                                                    <thead>
+                                                                                                        <tr style="text-align:center; vertical-align:middle">
+                                                                                                            <th></th>
+                                                                                                            {% for month in months %}
+                                                                                                                <th style="text-align:center; vertical-align:middle">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        <tr style="text-align:center">
+                                                                                                            <td>
+                                                                                                                Отбор
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center">
+                                                                                                                    <input style="text-align:center" class="form-control" type="text" id="GPE_out_{{ year }}_{{ name }}" name="GPE_out_{{ year }}_{{ name }}" value="{{ flows_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Закачка
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center; vertical-align:middle">
+                                                                                                                        <input style="text-align:center; vertical-align:middle" class="form-control" type="text" id="GPE_in_{{ year }}_{{ name }}" name="GPE_in_{{ year }}_{{ name }}" value="{{ flows_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {% else %}
+                                                                                    <div class="tab-pane fade" id="GPE_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_{{ year }}_{{ name }}_tab">
+                                                                                        <div class="card-block table-border-style" id="GPE_stream_{{ name }}">
+                                                                                            <div class="table-responsive">
+                                                                                                <table class="table table-hover">
+                                                                                                    <thead>
+                                                                                                        <tr>
+                                                                                                            <th></th>
+                                                                                                            {% for month in months %}
+                                                                                                                <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        <tr style="text-align:center">
+                                                                                                            <td>
+                                                                                                                Отбор
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center">
+                                                                                                                    <input style="text-align:center" class="form-control" type="text" id="GPE_out_{{ year }}_{{ name }}" name="GPE_out_{{ year }}_{{ name }}" value="{{ flows_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                        <tr>
+                                                                                                            <td>
+                                                                                                                Закачка
+                                                                                                            </td>
+                                                                                                            {% for i in month_range  %}
+                                                                                                                <td style="text-align:center; vertical-align:middle">
+                                                                                                                        <input style="text-align:center; vertical-align:middle" class="form-control" type="text" id="GPE_in_{{ year }}_{{ name }}" name="GPE_in_{{ year }}_{{ name }}" value="{{ flows_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                </td>
+                                                                                                            {% endfor %}
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    {% endif %}
+                                                                            {% endfor %}
+
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="season_GMT_{{ name }}" role="tabpanel" aria-labelledby="season_GMT_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Закачка/отбор ГМТ по годам</h5>
+                                                                            <hr>
+                                                                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                {% for year in years %}
+                                                                                {% if year == years|first %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link active" id="GMT_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GMT_{{ year }}_{{ name }}" role="tab" aria-controls="GMT_{{ year }}_{{ name }}" aria-selected="true">ГМТ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% else %}
+                                                                                    <li class="nav-item">
+                                                                                        <a class="nav-link" id="GMT_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GMT_{{ year }}_{{ name }}" role="tab" aria-controls="GMT_{{ year }}_{{ name }}" aria-selected="true">ГМТ {{ year }} </a>
+                                                                                    </li>
+                                                                                    {% endif %}
+                                                                                {% endfor %}
+                                                                            </ul>
+                                                                            <div class="tab-content" id="myTabContent">
+                                                                                {% for year in years %}
+                                                                                    {% if year == years|first %}
+                                                                                        <div class="tab-pane fade show active" id="GMT_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GMT_{{ year }}_{{ name }}_tab">
+                                                                                            <div class="card-block table-border-style" id="GMT_stream_{{ name }}">
+                                                                                                <div class="table-responsive">
+                                                                                                    <table class="table table-hover" style="width: 200%">
+                                                                                                        <col style="width: 200%">
+                                                                                                        <thead>
+                                                                                                            <tr style="text-align:center; vertical-align:middle">
+                                                                                                                <th></th>
+                                                                                                                {% for month in months %}
+                                                                                                                    <th class="col-sm-12 col-md-6" style="text-align:center; vertical-align:middle;width: 200px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            <tr style="text-align:center">
+                                                                                                                <td>
+                                                                                                                    Отбор
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; width: 200px" >
+                                                                                                                        <input style="text-align:center" class="form-control" size="20" type="text" id="GMT_out_{{ year }}_{{ name }}" name="GMT_out_{{ year }}_{{ name }}" value="{{ gmt_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                            <tr>
+                                                                                                                <td>
+                                                                                                                    Закачка
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; vertical-align:middle; width: 200px">
+                                                                                                                        <input  style="text-align:center" class="form-control" type="text" id="GMT_in_{{ year }}_{{ name }}" name="GMT_in_{{ year }}_{{ name }}" value="{{ gmt_in|dict_index:name|dict_index:year|list_index:i }}"aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    {% else %}
+                                                                                        <div class="tab-pane fade" id="GMT_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GMT_{{ year }}_{{ name }}_tab">
+                                                                                            <div class="card-block table-border-style" id="GMT_stream_{{ name }}">
+                                                                                                <div class="table-responsive">
+                                                                                                    <table class="table table-hover" style="width: 200%">
+                                                                                                        <col style="width: 200%">
+                                                                                                        <thead>
+                                                                                                            <tr style="text-align:center; vertical-align:middle">
+                                                                                                                <th></th>
+                                                                                                                {% for month in months %}
+                                                                                                                    <th class="col-sm-12 col-md-6" style="text-align:center; vertical-align:middle;width: 200px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {{ month }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                            <tr style="text-align:center">
+                                                                                                                <td>
+                                                                                                                    Отбор
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; width: 200px" >
+                                                                                                                        <input style="text-align:center" class="form-control" size="20" type="text" id="GMT_out_{{ year }}_{{ name }}" name="GMT_out_{{ year }}_{{ name }}" value="{{ gmt_out|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                            <tr>
+                                                                                                                <td>
+                                                                                                                    Закачка
+                                                                                                                </td>
+                                                                                                                {% for i in month_range %}
+                                                                                                                    <td style="text-align:center; vertical-align:middle; width: 200px">
+                                                                                                                        <input  style="text-align:center" class="form-control" type="text" id="GMT_in_{{ year }}_{{ name }}" name="GMT_in_{{ year }}_{{ name }}" value="{{ gmt_in|dict_index:name|dict_index:year|list_index:i }}" aria-label="...">
+                                                                                                                    </td>
+                                                                                                                {% endfor %}
+                                                                                                            </tr>
+                                                                                                        </tbody>
+                                                                                                    </table>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    {% endif %}
+
+                                                                                {% endfor %}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="tab-pane fade" id="daily_stream_{{ name }}" role="tabpanel" aria-labelledby="daily_stream_{{ name }}_tab">
+                                                                        <div class="col-sm-12">
+                                                                            <h5 class="mt-4">Распределение закачки и отбора в месяце по годам</h5>
+                                                                            <hr>
+                                                                                {% if not GPE_years|dict_index:name|length == 0 %}
+                                                                                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                    {% for year in GPE_years|dict_index:name %}
+                                                                                        {% if year == years|first %}
+                                                                                            <li class="nav-item">
+                                                                                                <a class="nav-link active" id="GPE_month_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_month_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_month_{{ year }}_{{ name }}" aria-selected="true">{{ year }} </a>
+                                                                                            </li>
+                                                                                            {% else %}
+                                                                                            <li class="nav-item">
+                                                                                                <a class="nav-link" id="GPE_month_{{ year }}_{{ name }}_tab" data-toggle="pill" href="#GPE_month_{{ year }}_{{ name }}" role="tab" aria-controls="GPE_month_{{ year }}_{{ name }}" aria-selected="true">{{ year }} </a>
+                                                                                            </li>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                    </ul>
+                                                                                    <div class="tab-content" id="myTabContent">
+                                                                                        {% if not GPE_years|dict_index:name|length == 0 %}
+                                                                                            {% for year in GPE_years|dict_index:name %}
+                                                                                                {% if year == GPE_years|dict_index:name|first %}
+                                                                                                    <div class="tab-pane fade show active" id="GPE_month_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_month_{{ year }}_{{ name }}_tab">
+                                                                                                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <li class="nav-item">
+                                                                                                                    <a class="nav-link" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab" data-toggle="pill" href="#GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tab" aria-controls="GPE_daily_{{ year }}_{{ month }}_{{ name }}" aria-selected="true">{{ month }} </a>
+                                                                                                                </li>
+                                                                                                            {% endfor %}
+                                                                                                        </ul>
+
+                                                                                                        <div class="tab-content" id="myTabContent">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <div class="tab-pane fade" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab">
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату начала периода</label>
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите значение отбора/закачки</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_first_{{ year }}_{{ month }}_{{ name }}" onload="date_first(this,{{ days_range|dict_index:name|dict_index:year|dict_index:month|first|safe }})">
+
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="text" name="date_value_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату конца периода</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_last_{{ year }}_{{ month }}_{{ name }}" onload="date_last(this,{{ days_range|dict_index:name|dict_index:year|dict_index:month|last|safe }})">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <br>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <button type="button" class="btn btn-primary" name ="button_date" value="{{ year }}__{{ month }}__{{ name }}" onclick="date_function(this)">Сохранить значение</button>
+                                                                                                                            <input type="hidden" name="range_length_{{ year }}_{{ month }}_{{ name }}" value="{{ days_range|dict_index:name|dict_index:year|dict_index:month|length }}">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <hr>
+                                                                                                                    <table>
+                                                                                                                        <thead>
+                                                                                                                            <tr>
+                                                                                                                                <th>
+                                                                                                                                    Дата
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Отбор
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Закачка
+                                                                                                                                </th>
+                                                                                                                            </tr>
+
+                                                                                                                        </thead>
+                                                                                                                        <tbody>
+                                                                                                                            {% for d in days_range|dict_index:name|dict_index:year|dict_index:month %}
+                                                                                                                                <tr>
+                                                                                                                                    <th>
+                                                                                                                                        {{ d }}
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_out_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:0 }}">
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_in_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:1 }}">
+
+                                                                                                                                    </th>
+                                                                                                                                </tr>
+                                                                                                                            {% endfor %}
+                                                                                                                        </tbody>
+                                                                                                                    </table>
+                                                                                                                </div>
+                                                                                                            {% endfor %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% else %}
+                                                                                                    <div class="tab-pane fade" id="GPE_month_{{ year }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_month_{{ year }}_{{ name }}_tab">
+                                                                                                        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <li class="nav-item">
+                                                                                                                    <a class="nav-link" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab" data-toggle="pill" href="#GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tab" aria-controls="GPE_daily_{{ year }}_{{ month }}_{{ name }}" aria-selected="true">{{ month }} </a>
+                                                                                                                </li>
+                                                                                                            {% endfor %}
+                                                                                                        </ul>
+
+                                                                                                        <div class="tab-content" id="myTabContent">
+                                                                                                            {% for month in GPE_months|dict_index:name|dict_index:year %}
+                                                                                                                <div class="tab-pane fade" id="GPE_daily_{{ year }}_{{ month }}_{{ name }}" role="tabpanel" aria-labelledby="GPE_daily_{{ year }}_{{ month }}_{{ name }}_tab">
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату начала периода</label>
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите значение отбора/закачки</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_first_{{ year }}_{{ month }}_{{ name }}" onload="date_first(this,{{ days_range|dict_index:name|dict_index:year|dict_index:month|first|safe }}) ">
+                                                                                                                            <script> date_first(document.getElementsByName('date_first_' + {{ year }} + '_' + {{ month }} + '_' + {{ name }}), {{ days_range|dict_index:name|dict_index:year|dict_index:month|first|safe }})</script>
+                                                                                                                        </div>
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="text" name="date_value_{{ year }}_{{ month }}_{{ name }}" value="">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <label>Введите дату конца периода</label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <input type="date" name="date_last_{{ year }}_{{ month }}_{{ name }}" onload="date_last(this,{{ days_range|dict_index:name|dict_index:year|dict_index:month|last|safe }})">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <br>
+                                                                                                                    <div class="row">
+                                                                                                                        <div class="col">
+                                                                                                                            <button type="button" class="btn btn-primary" name ="button_date" value="{{ year }}__{{ month }}__{{ name }}" onclick="date_function(this)">Сохранить значение</button>
+                                                                                                                            <input type="hidden" name="range_length_{{ year }}_{{ month }}_{{ name }}" value="{{ days_range|dict_index:name|dict_index:year|dict_index:month|length }}">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <hr>
+                                                                                                                    <table>
+                                                                                                                        <thead>
+                                                                                                                            <tr>
+                                                                                                                                <th>
+                                                                                                                                    Дата
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Отбор
+                                                                                                                                </th>
+                                                                                                                                <th>
+                                                                                                                                    Закачка
+                                                                                                                                </th>
+                                                                                                                            </tr>
+
+                                                                                                                        </thead>
+                                                                                                                        <tbody>
+                                                                                                                            {% for d in days_range|dict_index:name|dict_index:year|dict_index:month %}
+                                                                                                                                <tr>
+                                                                                                                                    <th>
+                                                                                                                                        {{ d }}
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_out_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:0 }}">
+                                                                                                                                    </th>
+                                                                                                                                    <th>
+                                                                                                                                        <input type="text" name="flow_direction_in_{{ year }}_{{ month }}_{{ d }}_{{ name }}" value="{{ days|dict_index:name|dict_index:year|dict_index:month|dict_index:d|list_index:1 }}">
+
+                                                                                                                                    </th>
+                                                                                                                                </tr>
+                                                                                                                            {% endfor %}
+                                                                                                                        </tbody>
+                                                                                                                    </table>
+                                                                                                                </div>
+                                                                                                            {% endfor %}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                {% endif %}
+                                                                                            {% endfor %}
+                                                                                        {% endif %}
+                                                                                    </div>
+                                                                                {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                    <!-- [ Main Content ] end -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+    <script>
+        function date_first(element, date_initial) {
+            if (!(date_initial == null)) {
+                date_array = date_initial.toString().split(".");
+                let date_output = date_array[2] + "-" + date_array[1] + "-" + date_array[0];
+                element.value = date_output;
+            }
+        }
+    </script>
+
+    <script>
+        function date_last(element, date_initial){
+            alert("Я работаю")
+            if (!(date_initial == null)) {
+                date_array = date_initial.toString().split(".");
+                let date_output = date_array[2] + "-" + date_array[1] + "-" + date_array[0];
+                element.value = "2022-01-01";
+            }
+        }
+    </script>
+    <script>
+        function date_function(element){
+
+            let current_date;
+            var adress_parsed = element.value.split('__');
+            var date_start_array = document.getElementsByName("date_first_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + adress_parsed[2])[0].value.split("-");
+            var date_end_array = document.getElementsByName("date_last_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + adress_parsed[2])[0].value.split("-");
+            var date_start = date_start_array[2] + "." + date_start_array[1] + "." + date_start_array[0];
+            var date_end = date_end_array[2] + "." + date_end_array[1] + "." + date_end_array[0];
+            if (!(date_start == null) || !(date_end == null)){
+                var date_first_fm = parseInt(date_start_array[2]);
+                var date_last_fm = parseInt(date_end_array[2]);
+                const flow_value = parseInt(document.getElementsByName("date_value_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + adress_parsed[2])[0].value);
+                if (flow_value > 0){
+                    for (date_first_fm; date_first_fm <= date_last_fm; date_first_fm++){
+                        if (date_first_fm < 10){
+                            current_date = "0" + date_first_fm + "." + date_end_array[1] + "." + date_end_array[0];
+                            document.getElementsByName("flow_direction_in_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = flow_value;
+                            document.getElementsByName("flow_direction_out_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = 0;
+                        }
+                        else{
+                            current_date = date_first_fm + "." + date_end_array[1] + "." + date_end_array[0];
+                            document.getElementsByName("flow_direction_in_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = flow_value;
+                            document.getElementsByName("flow_direction_out_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = 0;
+                        }
+                    }
+                }
+                else{
+                    for (date_first_fm; date_first_fm <= date_last_fm; date_first_fm++){
+                        if (date_first_fm < 10){
+                            current_date = "0" + date_first_fm + "." + date_end_array[1] + "." + date_end_array[0];
+                            document.getElementsByName("flow_direction_in_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = 0;
+                            document.getElementsByName("flow_direction_out_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = -flow_value;
+                        }
+                        else{
+                            current_date = date_first_fm + "." + date_end_array[1] + "." + date_end_array[0];
+                            document.getElementsByName("flow_direction_in_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = 0;
+                            document.getElementsByName("flow_direction_out_" + adress_parsed[0] + "_" + adress_parsed[1] + "_" + current_date + "_" + adress_parsed[2])[0].value = -flow_value;
+                        }
+                    }
+                }
+
+            }
+        }
+    </script>
+
+{% endblock javascripts %}

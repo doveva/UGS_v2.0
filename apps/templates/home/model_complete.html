@@ -1,0 +1,91 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page Blank {% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h5 class="m-b-10">Меню сохранения модели</h5>
+                            </div>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                <li class="breadcrumb-item"><a href="javascript:">Запуск модели</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ breadcrumb ] end -->
+            <div class="main-body">
+                <div class="page-wrapper">
+                    <!-- [ Main Content ] start -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Запуск модели</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="#">
+                                        <div class="form-group">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label for="ModelName">Название модели</label>
+                                                    <input type="text" class="form-control" placeholder="Название модели"
+                                                       aria-label="ModelName"  aria-describedby="basic-addon2" name="model_name" required
+                                                    value={{ model_name }}>
+
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <button class="btn btn-primary" type="submit" name="model_start"
+                                                            value="model_start">Запустить расчёт</button>
+                                                </div>
+                                                {% if not enable_download %}
+                                                    <div class="col-md-3">
+                                                        <button disabled class="btn btn-primary" type="submit" name="model_download"
+                                                                value="model_start">Скачать файлы</button>
+                                                    </div>
+
+                                                {% else %}
+                                                    <div class="col-md-3">
+                                                        <button class="btn btn-primary" type="submit" name="model_download"
+                                                                value="model_start">Скачать файлы</button>
+                                                    </div>
+                                                {% endif %}
+                                                <input type="hidden" id="ErrorMessage" value="{{ error_message|safe }}">
+                                                {% if model_status %}
+                                                    <script>
+                                                        alert(document.getElementById("ErrorMessage").value);
+                                                    </script>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Main Content ] end -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
