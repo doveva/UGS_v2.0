@@ -1,0 +1,201 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Графики кривых ПХГ {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+
+    <link rel="stylesheet" href="/static/assets/plugins/chart-morris/css/morris.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10">Модуль ПХГ</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Модуль ПХГ</a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Графики кривых</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                <h5 class="mb-3">Выбор ПХГ</h5>
+                                <hr>
+                <div class="card">
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <form method="post">
+                            {% csrf_token %}
+                                <div class="form-check-inline">
+                                     <select class="form-control" id="UGS_select" name="UGS_select">
+                                         {% for i in UGS_nm %}
+                                            <option
+                                                {% if i == data_name %}
+                                                selected = "selected"
+                                                {% endif %}>
+                                                {{ i }}
+                                            </option>
+                                         {% endfor %}
+                                     </select>
+
+                                 </div>
+                                <button type="submit" class="btn btn-primary" name="submit_chart" value="submit_chart">Пересчитать график</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <!-- [ Morris Chart ] start -->
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>График отбора выбранного ПХГ</h5>
+                            </div>
+
+                            <div class="card-block">
+                                <!--<div id="UGS_chart" class="ChartShadow" style="height:300px"></div>-->
+                                <input type="hidden" id="UGS_out_value" name="variable" value="{{ data_out|safe }}">
+                                <input type="hidden" id="name" name="variable" value="{{ data_name|safe }}">
+                                <canvas id="UGS_chart_out"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>График закачки выбранного ПХГ</h5>
+                            </div>
+                            <div class="card-block">
+                                <input type="hidden" id="UGS_in_value" name="variable" value="{{ data_in|safe }}">
+                                <canvas id="UGS_chart_in"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+    <script src="/static/assets/plugins/chart-morris/js/raphael.min.js"></script>
+    <script src="/static/assets/plugins/chart-morris/js/morris.min.js"></script>
+    <script src="/static/assets/js/pages/chart-morris-custom.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <script>
+        var UGS_out = document.getElementById("UGS_out_value").value;
+        var UGS_name = document.getElementById("name").value;
+        var data_list_out = eval(UGS_out)
+        let UGS_data_out = document.getElementById("UGS_chart_out");
+        new Chart(UGS_data_out, {
+            type: "line",
+            data: {
+                datasets: [{
+                    data: data_list_out,
+                    fill: false ,
+                    borderColor: 'rgb(75, 192, 192)',
+                    label: UGS_name,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Объём'
+                        }
+                    }],
+                    yAxes: [{
+                        type: 'linear',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Отбор'
+                        }
+                    }]
+                },
+                layout: {
+                    padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 25
+                    }
+                }
+            }
+        });
+    </script>
+        <script>
+        var UGS_in = document.getElementById("UGS_in_value").value;
+        var UGS_name = document.getElementById("name").value;
+        var data_list_in = eval(UGS_in)
+        let UGS_data_in = document.getElementById("UGS_chart_in");
+        new Chart(UGS_data_in, {
+            type: "line",
+            data: {
+                datasets: [{
+                    data: data_list_in,
+                    fill: false ,
+                    borderColor: 'rgb(75, 192, 192)',
+                    label: UGS_name,
+                    tension: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    xAxes: [{
+                        type: 'linear',
+                        position: 'bottom',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Объём'
+                        }
+                    }],
+                    yAxes: [{
+                        type: 'linear',
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Отбор'
+                        }
+                    }]
+                },
+                layout: {
+                    padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 25
+                    }
+                }
+            }
+        });
+    </script>
+
+{% endblock javascripts %}
