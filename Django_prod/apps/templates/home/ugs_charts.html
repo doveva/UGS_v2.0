@@ -1,0 +1,255 @@
+{% extends "layouts/base.html" %}
+
+{% load filters %}
+
+{% block title %} Графики кривых ПХГ {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+
+    <link rel="stylesheet" href="/static/assets/plugins/chart-morris/css/morris.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+            <div class="page-block">
+                <div class="row align-items-center">
+                    <div class="col-md-12">
+                        <div class="page-header-title">
+                            <h5 class="m-b-10 f-16">Графики</h5>
+                        </div>
+                        <ul class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Параметры</a></li>
+                            <li class="breadcrumb-item"><a href="javascript:">Графики кривых</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <form method="post">
+                            {% csrf_token %}
+                                <div class="form-check-inline">
+                                     <select class="form-control" id="UGS_select"  name="UGS_select" style="padding: 5px; font-size: 10px">
+                                         {% for i in UGS_nm %}
+                                            <option
+                                                {% if i == data_name %}
+                                                selected = "selected"
+                                                {% endif %}>
+                                                {{ i }}
+                                            </option>
+                                         {% endfor %}
+                                     </select>
+
+                                 </div>
+                                <button type="button" class="btn btn-primary m-0" style="padding: 5px; padding-bottom: 13px; padding-top: 13px; font-size: 10px" name="submit_chart" id="submit_chart"  value="submit_chart">Пересчитать график</button>
+                            </form>
+                        </div>
+                    </div>
+
+
+                <div class="row">
+                    <!-- [ Morris Chart ] start -->
+                    <div class="col-xl-6">
+                        <div class="card p-l-3 p-r-5 pb-lg-0">
+                            <div class="card-header" style="padding-top: 5px; padding-bottom: 5px; padding-left: 10px; padding-right: 5px">
+                                <h5 style="font-size: 12px">График отбора выбранного ПХГ</h5>
+                            </div>
+
+                            <div class="card-block" style="padding: 5px">
+                                <!--<div id="UGS_chart" class="ChartShadow" style="height:300px"></div>-->
+                                <input type="hidden" id="UGS_out_value" name="variable" value="{{ data_out|safe }}">
+                                <input type="hidden" id="name" name="variable" value="{{ data_name|safe }}">
+                                <canvas id="UGS_chart_out"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6">
+                        <div class="card">
+                            <div class="card-header" style="padding-top: 3px; padding-bottom: 3px">
+                                <h5 style="font-size: 12px">График закачки выбранного ПХГ</h5>
+                            </div>
+                            <div class="card-block" style="padding: 5px">
+                                <input type="hidden" id="UGS_in_value" name="variable" value="{{ data_in|safe }}">
+                                <canvas id="UGS_chart_in"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xl-6">
+                        <div class="card p-l-3 p-r-5 pb-lg-0">
+                            <div class="card-block" style="padding: 5px">
+                                <div class="row">
+                                    <div class="col mr-3">
+                                        <p class="font-weight-bold">
+                                            Объём ПХГ, м3
+                                        </p>
+                                    </div>
+                                    <div class="col" style="text-align: right">
+                                        <p id="UGS_capacity">
+
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col mr-3">
+                                        <p class="font-weight-bold">
+                                            Максимально возможная закачка, м3
+                                        </p>
+                                    </div>
+                                    <div class="col" style="text-align: right">
+                                        <p id="volume_in">
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col mr-3">
+                                        <p class="font-weight-bold">
+                                            Максимально возможный отбор, м3
+                                        </p>
+                                    </div>
+                                    <div class="col" style="text-align: right">
+                                        <p id="volume_out">
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+    <script src="/static/assets/plugins/chart-morris/js/raphael.min.js"></script>
+    <script src="/static/assets/plugins/chart-morris/js/morris.min.js"></script>
+    <script src="/static/assets/js/pages/chart-morris-custom.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <script>
+    $( document ).ready(function() {
+        $($('button[name="submit_chart"]') ).click(function (){
+            let UGS_name = document.getElementById("UGS_select").value
+            let url = "http://127.0.0.1/api/UGS_charts/?UGS=" + UGS_name;
+            $.getJSON(url, function (data) {
+                // Считывание данных графиков
+                let UGS_in = data["Points_in"];
+                let UGS_out = data["Points_out"];
+
+                // Считывание данных параметров ПХГ
+                document.getElementById("UGS_capacity").textContent = Math.round(data["capacity"], 0);
+                document.getElementById("volume_in").textContent  = Math.round(data["volume_in"], -2);
+                document.getElementById("volume_out").textContent  = Math.round(data["volume_out"], -2);
+
+                // Отрисовка графиков
+                let UGS_data_out = document.getElementById("UGS_chart_out");
+                let UGS_data_in = document.getElementById("UGS_chart_in");
+
+                new Chart(UGS_data_out, {
+                    type: "line",
+                    data: {
+                        datasets: [{
+                            data: UGS_out,
+                            fill: false,
+                            borderColor: 'rgb(75, 192, 192)',
+                            label: UGS_name,
+                            tension: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            xAxes: [{
+                                type: 'linear',
+                                position: 'bottom',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Коэффициент заполнения ПХГ'
+                                }
+                            }],
+                            yAxes: [{
+                                type: 'linear',
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Понижающий коэффициент'
+                                }
+                            }]
+                        },
+                        layout: {
+                            padding: {
+                                left: 0,
+                                right: 0,
+                                top: 0,
+                                bottom: 25
+                            }
+                        }
+                    }
+            });
+                new Chart(UGS_data_in, {
+                type: "line",
+                data: {
+                    datasets: [{
+                        data: UGS_in,
+                        fill: false ,
+                        borderColor: 'rgb(75, 192, 192)',
+                        label: UGS_name,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        xAxes: [{
+                            type: 'linear',
+                            position: 'bottom',
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Коэффициент заполнения ПХГ'
+                            }
+                        }],
+                        yAxes: [{
+                            type: 'linear',
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Понижающий коэффициент'
+                            }
+                        }]
+                    },
+                    layout: {
+                        padding: {
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 25
+                        }
+                    }
+                }
+            });
+        })
+        })
+        document.getElementById("submit_chart").click();
+    })
+
+    </script>
+
+
+{% endblock javascripts %}

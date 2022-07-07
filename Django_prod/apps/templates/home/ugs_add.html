@@ -1,0 +1,178 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Добавление кривых {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="pcoded-content">
+        <div class="pcoded-inner-content">
+            <!-- [ breadcrumb ] start -->
+            <div class="page-header">
+                <div class="page-block">
+                    <div class="row align-items-center">
+                        <div class="col-md-12">
+                            <div class="page-header-title">
+                                <h5 class="m-b-10 f-16">Создание ПХГ</h5>
+                            </div>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
+                                <li class="breadcrumb-item"><a href="javascript:">Параметры</a></li>
+                                <li class="breadcrumb-item f-14"><a href="javascript:">Создание ПХГ</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ breadcrumb ] end -->
+            <div class="main-body">
+                <div class="page-wrapper">
+                    <!-- [ Main Content ] start -->
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card p-l-3 p-r-5 pb-lg-0">
+
+                                <form method="post" action="#">
+                                    <div class="card-body p-1 pl-3">
+                                        <div class="form-group" style="margin: 0px">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label for="UGSName" style="font-size: 10px">Название ПХГ</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="ПХГ"
+                                                       aria-label="UGSName" aria-describedby="basic-addon2" required name="UGS"
+                                                    value={{ name }} >
+
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="UGSPoints" style="font-size: 10px">Количество точек отбор</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="Количество точек отбора"
+                                                       aria-label="Points" aria-describedby="basic-addon2" required
+                                                           name="pointsvalue" value={{ number }}>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label for="UGSPoints" style="font-size: 10px">Количество точек закачки</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="Количество точек закачки"
+                                                       aria-label="Points_in" aria-describedby="basic-addon2" required name="pointsvalue_in"
+                                                    value={{ number_in }}>
+                                                </div>
+
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label for="UGS_capacity" style="font-size: 10px">Ёмкость ПХГ</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="Ёмкость ПХГ в м3"
+                                                       aria-label="UGS_capacity" aria-describedby="basic-addon2" required name="capacity"
+                                                    value={{ capacity }}>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="UGS_in" style="font-size: 10px">Максимальный объём закачки в ПХГ</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="Максимальный объём закачки в м3"
+                                                       aria-label="UGS_in" aria-describedby="basic-addon2" required name="ugs_in"
+                                                    value= {{ ugs_in }}>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label for="UGS_out" style="font-size: 10px">Максимальный объём отбора из ПХГ</label>
+                                                    <input type="text" class="form-control" style="font-size: 10px; padding-left: 3px;padding-right: 3px;padding-bottom: 1px;padding-top: 1px;border-radius: 0px" placeholder="Максимальный объём отбора в м3"
+                                                       aria-label="UGS_out" aria-describedby="basic-addon2" required name="ugs_out"
+                                                    value= {{ ugs_out }}>
+                                                </div>
+                                            </div>
+                                            <br style="">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <button class="btn btn-dark p-0 pl-3 pr-3 " style="font-size: 10px;border-radius: 0px" type="submit" name="pointsnumber"
+                                                            value="pointsnumber">Создать</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    {% if number == 0 %}
+
+                                    {% else %}
+                                    <div class="accordion" id="list_data">
+
+                                            <div class="card-header" style="font-size: 12px; padding-top: 3px;padding-bottom: 3px" id="headingOne">
+                                                <h5 class="mb-0" style="font-size: 12px; padding-top: 3px;padding-bottom: 3px; padding-left: 1px"><a href="#!" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">Добавление точек</a></h5>
+                                            </div>
+                                            <div id="collapseOne" class="card-body p-0 collapse show" aria-labelledby="headingOne" data-parent="#list_data">
+                                                <div class="form-group pb-1" style="margin-left: 15px">
+                                                    {% csrf_token %}
+                                                        <div class="row">
+                                                            <div class="col-md-2">
+                                                                <h5  style="text-align: center; border-radius: 0px; margin: 10px; font-size: 10px">X Отбор</h5>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <h5 style="text-align: center;border-radius: 0px;  margin-top: 10px; font-size: 10px">Y Отбор</h5>
+                                                            </div>
+                                                            <div class="col-md-1"></div>
+                                                            <div class="col-md-2">
+                                                                <h5 style="text-align: center;border-radius: 0px; margin-top: 10px; font-size: 10px">X Закачка</h5>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <h5 style="text-align: center;border-radius: 0px; margin-top: 10px; font-size: 10px">Y Закачка</h5>
+                                                            </div>
+                                                        </div>
+                                                        {% for i in max_range %}
+                                                            <div class="row">
+                                                                {% if i in range_out %}
+                                                                    <div class="col-md-2">
+                                                                        <div class="form-group pb-1">
+                                                                        <input type="integer" class="form-control" style="font-size: 10px; padding-top: 3px;padding-bottom: 3px; padding-left: 1px; padding-right: 1px; border-radius: 0px" name="Xout{{ i }}_value" placeholder="X{{ i }}" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <div class="form-group">
+                                                                        <input type="integer" class="form-control" style="font-size: 10px; padding-top: 3px;padding-bottom: 3px; padding-left: 1px; padding-right: 1px; border-radius: 0px" name="Yout{{ i }}_value" placeholder="Y{{ i }}" required>
+                                                                        </div>
+                                                                    </div>
+                                                                {% else %}
+                                                                    <div class="col-md-2">
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                    </div>
+                                                                {% endif %}
+                                                                <div class="col-md-1"></div>
+                                                                {% if i in range_in %}
+                                                                    <div class="col-md-2">
+                                                                        <div class="form-group">
+                                                                        <input type="integer" class="form-control" style="font-size: 10px; padding-top: 3px;padding-bottom: 3px; padding-left: 1px; padding-right: 1px; border-radius: 0px" name="Xin{{ i }}_value" placeholder="X{{ i }}" required>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <div class="form-group">
+                                                                        <input type="integer" class="form-control" style="font-size: 10px; padding-top: 3px; padding-bottom: 3px; padding-left: 1px; padding-right: 1px; border-radius: 0px" name="Yin{{ i }}_value" placeholder="Y{{ i }}" required>
+                                                                        </div>
+                                                                    </div>
+                                                                {% else %}
+                                                                    <div class="col-md-2">
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endfor %}
+                                                        <button type="submit" class="btn btn-success" style="padding: 5px; font-size: 10px; border-radius: 0px; background-color: #28a745; border-color: #28a745" name="submit_line" value="submit_line">Сохранить кривую</button>
+                                                </div>
+                                            </div>
+                                    </div>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ Main Content ] end -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

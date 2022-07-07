@@ -1,0 +1,21 @@
+{
+    "name": "django-dashboard-dattaable",
+    "mastertemplate": "boilerplate-code-django-dashboard",
+    "version": "1.0.3",
+    "description": "UGS module for logistics department",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "bugs": {
+        "url": "",
+        "email": "v.golubev@gazpromexport.ru"
+    },
+    "author": "Gazprom Export",
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}
